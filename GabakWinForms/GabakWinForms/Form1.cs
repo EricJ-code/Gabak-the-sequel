@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Bson;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -19,26 +20,33 @@ namespace GabakWinForms
         {
             InitializeComponent();
         }
-        private struct Origin
+        private readonly struct XY
         {
-            public Origin(double x, double y)
+            public XY(double x, double y)
+            {
+                this.X = (float)x;
+                this.Y = (float)y;
+            }
+            public XY(float x, float y)
             {
                 this.X = x;
                 this.Y = y;
             }
-            public double X { get;}
-            public double Y { get;}
+            public float X { get;}
+            public float Y { get;}
         }
 
-        private struct PixelsPerMeter
+        private void drawRectangle(PaintEventArgs e, Pen pen, XY center, double width, double height, double degree)
         {
-            public PixelsPerMeter(double x, double y)
-            {
-                this.X = x;
-                this.Y = y;
-            }
-            public double X { get; }
-            public double Y { get; }
+            double radian = Math.PI / 180 * degree;
+            XY topLeft = new XY(center.X - width / 2, center.Y - height / 2);
+            XY topRight = new XY(topLeft.X + width, topLeft.Y);
+            XY bottomRight = new XY(topLeft.X + width, topLeft.Y + height);
+            XY bottomLeft = new XY(topLeft.X, topLeft.Y + height);
+            e.Graphics.DrawLine(pen, topLeft.X, topLeft.Y, topRight.X, topRight.Y);
+            e.Graphics.DrawLine(pen, topRight.X, topRight.Y, bottomRight.X, bottomRight.Y);
+            e.Graphics.DrawLine(pen, bottomRight.X, bottomRight.Y, bottomLeft.X, bottomLeft.Y);
+            e.Graphics.DrawLine(pen, bottomLeft.X, bottomLeft.Y, topLeft.X, topLeft.Y);
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
@@ -46,26 +54,22 @@ namespace GabakWinForms
             (var userData, var warehouseData) = Program.FetchData();
 
             Pen pen = new Pen(Color.FromArgb(255, 0, 0, 0));
-            SolidBrush brush = new SolidBrush(Color.FromArgb(255, 0, 0, 0));
-            SolidBrush brushRed = new SolidBrush(Color.FromArgb(255, 255, 0, 0));
+            pen.Width = 2;
 
-            Origin origin = new Origin(panel1.Size.Width / 2, panel1.Size.Height * 0.95);
-            PixelsPerMeter ppm = new PixelsPerMeter(
+            XY origin = new XY(panel1.Size.Width / 2, (float)(panel1.Size.Height * 0.95));
+            XY pixelPerMeter = new XY(
                 panel1.Size.Width / warehouseData.WarehouseWidth,
                 panel1.Size.Height / warehouseData.WarehouseDepth
             );
 
+            // draw the warehouse racks
             for (int i = 0; i < warehouseData.RacksLocation.Count; i++)
             {
-                double x = origin.X + warehouseData.RacksLocation[i].X * ppm.X;
-                double y = origin.Y + warehouseData.RacksLocation[i].Y * ppm.Y;
-                int offsetx = Convert.ToInt32(warehouseData.RackWidth * ppm.X);
-                int offsety = Convert.ToInt32(warehouseData.RackDepth * ppm.Y);
-                int boxX = Convert.ToInt32(x - (offsetx / 2));
-                int boxY = Convert.ToInt32(y - (offsety / 2));
-                e.Graphics.FillRectangle(brush, new Rectangle(boxX, boxY, offsetx+1, offsety+1)); // add 1 to fill gaps
+                double x = origin.X + warehouseData.RacksLocation[i].X * pixelPerMeter.X;
+                double y = origin.Y + warehouseData.RacksLocation[i].Y * pixelPerMeter.Y;
+                double degree = warehouseData.RacksLocation[i].Angle;
+                this.drawRectangle(e, pen, new XY(x, y), warehouseData.RackWidth * pixelPerMeter.X, warehouseData.RackDepth * pixelPerMeter.Y, degree);
             }
-            e.Graphics.FillRectangle(brushRed, new Rectangle(Convert.ToInt32(origin.X), Convert.ToInt32(origin.Y), 5, 5));
         }
     }
 }
