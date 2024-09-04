@@ -36,13 +36,34 @@ namespace GabakWinForms
             public float Y { get;}
         }
 
+        private XY applyRotation(XY point, XY center, double degree)
+        {
+            double radians = degree * Math.PI / 180.0;
+
+            float translatedX = point.X - center.X;
+            float translatedY = point.Y - center.Y;
+
+            float rotatedX = (translatedX * (float)Math.Cos(radians)) - (translatedY * (float)Math.Sin(radians));
+            float rotatedY = (translatedX * (float)Math.Sin(radians)) + (translatedY * (float)Math.Cos(radians));
+
+            float updatedX = rotatedX + center.X;
+            float updatedY = rotatedY + center.Y;
+
+            return new XY(updatedX, updatedY);
+        }
+
         private void drawRectangle(PaintEventArgs e, Pen pen, XY center, double width, double height, double degree)
         {
-            double radian = Math.PI / 180 * degree;
             XY topLeft = new XY(center.X - width / 2, center.Y - height / 2);
             XY topRight = new XY(topLeft.X + width, topLeft.Y);
             XY bottomRight = new XY(topLeft.X + width, topLeft.Y + height);
             XY bottomLeft = new XY(topLeft.X, topLeft.Y + height);
+
+            topLeft = applyRotation(topLeft, center, degree);
+            topRight = applyRotation(topRight, center, degree);
+            bottomRight = applyRotation(bottomRight, center, degree);
+            bottomLeft = applyRotation(bottomLeft, center, degree);
+
             e.Graphics.DrawLine(pen, topLeft.X, topLeft.Y, topRight.X, topRight.Y);
             e.Graphics.DrawLine(pen, topRight.X, topRight.Y, bottomRight.X, bottomRight.Y);
             e.Graphics.DrawLine(pen, bottomRight.X, bottomRight.Y, bottomLeft.X, bottomLeft.Y);
