@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using System.Xml;
 using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace GabakWinForms
 {
@@ -56,19 +57,43 @@ namespace GabakWinForms
         [STAThread]
         static void Main()
         {
-           
-
             // Run Application
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
-
-            
         }
 
+        public static (UserData, WarehouseData) FetchData()
+        {
+            try
+            {
+                // hardcoded path for the downloads folder file "test.ard"
+                string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "test.ard");
+                string fileContent = File.ReadAllText(filePath);
+
+                // Parse the XML data from the file
+                var warehouseData = ParseARD(fileContent);
+
+                // DEBUG OUTPUT
+                Console.WriteLine("Warehouse Width: " + warehouseData.WarehouseWidth);
+                Console.WriteLine("Warehouse Depth: " + warehouseData.WarehouseDepth);
+                Console.WriteLine("Number of Racks: " + warehouseData.RacksLocation.Count);
+
+                var userData = new UserData();
+                return (userData, warehouseData);
+            }
+            catch (Exception ex)
+            {
+                // if file not found
+                Console.WriteLine("Error reading file: " + ex.Message);
+                return (null, null);
+            }
+        }
+
+        /*
         public static (UserData, WarehouseData) FetchData(string sessionID = "OLXex0tmxckGhA4vvZKhvHhUZfMKVEnf")
         {
-            // Create an HTTPClient instance (using statement to automatically dispose of object)
+            Create an HTTPClient instance (using statement to automatically dispose of object)
             using (var client = new HttpClient())
             {
                 var offset = 0;
@@ -132,9 +157,9 @@ namespace GabakWinForms
                 //    Console.WriteLine($"Rack Location - X: {rack.X}, Y: {rack.Y}, Angle: {rack.Angle}");
                 //}
                 return (rootObject.data, warehouseData);
-            }
+            } 
         }
-
+        */
         public static string CleanXML(string jsonString)
         {
             var jsonObject = JObject.Parse(jsonString);
