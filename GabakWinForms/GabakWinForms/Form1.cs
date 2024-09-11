@@ -43,7 +43,6 @@ namespace GabakWinForms
             e.Graphics.DrawLine(pen, (float)x3, (float)y3, (float)x4, (float)y4);
             e.Graphics.DrawLine(pen, (float)x4, (float)y4, (float)x1, (float)y1);
         }
-
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
             (var userData, var warehouseData) = Program.FetchData();
