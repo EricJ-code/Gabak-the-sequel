@@ -36,17 +36,12 @@ namespace GabakWinForms
             public float Y { get;}
         }
 
-        private void drawRectangle(PaintEventArgs e, Pen pen, XY center, double width, double height, double degree)
+        private void drawRectangle(PaintEventArgs e, Pen pen, double width, double height, double degree, double x1, double x2, double x3, double x4, double y1, double y2, double y3, double y4)
         {
-            double radian = Math.PI / 180 * degree;
-            XY topLeft = new XY(center.X - width / 2, center.Y - height / 2);
-            XY topRight = new XY(topLeft.X + width, topLeft.Y);
-            XY bottomRight = new XY(topLeft.X + width, topLeft.Y + height);
-            XY bottomLeft = new XY(topLeft.X, topLeft.Y + height);
-            e.Graphics.DrawLine(pen, topLeft.X, topLeft.Y, topRight.X, topRight.Y);
-            e.Graphics.DrawLine(pen, topRight.X, topRight.Y, bottomRight.X, bottomRight.Y);
-            e.Graphics.DrawLine(pen, bottomRight.X, bottomRight.Y, bottomLeft.X, bottomLeft.Y);
-            e.Graphics.DrawLine(pen, bottomLeft.X, bottomLeft.Y, topLeft.X, topLeft.Y);
+            e.Graphics.DrawLine(pen, (float)x1, (float)y1, (float)x2, (float)y2);
+            e.Graphics.DrawLine(pen, (float)x2, (float)y2, (float)x3, (float)y3);
+            e.Graphics.DrawLine(pen, (float)x3, (float)y3, (float)x4, (float)y4);
+            e.Graphics.DrawLine(pen, (float)x4, (float)y4, (float)x1, (float)y1);
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
@@ -65,10 +60,17 @@ namespace GabakWinForms
             // draw the warehouse racks
             for (int i = 0; i < warehouseData.RacksLocation.Count; i++)
             {
-                double x = origin.X + warehouseData.RacksLocation[i].X * pixelPerMeter.X;
-                double y = origin.Y + warehouseData.RacksLocation[i].Y * pixelPerMeter.Y;
+                // x1: bottom left, x2: top left, x3: top right, x4: bottom right 
+                double x1 = warehouseData.RacksLocation[i].X2;
+                double x2 = warehouseData.RacksLocation[i].X1;
+                double x3 = warehouseData.RacksLocation[i].X3;
+                double x4 = warehouseData.RacksLocation[i].X4;
+                double y1 = warehouseData.RacksLocation[i].Y2;
+                double y2 = warehouseData.RacksLocation[i].Y1;
+                double y3 = warehouseData.RacksLocation[i].Y3;
+                double y4 = warehouseData.RacksLocation[i].Y4; 
                 double degree = warehouseData.RacksLocation[i].Angle;
-                this.drawRectangle(e, pen, new XY(x, y), warehouseData.RackWidth * pixelPerMeter.X, warehouseData.RackDepth * pixelPerMeter.Y, degree);
+                this.drawRectangle(e, pen, warehouseData.RackWidth * pixelPerMeter.X, warehouseData.RackDepth * pixelPerMeter.Y, degree, x1 * pixelPerMeter.X, x2 * pixelPerMeter.X, x3 * pixelPerMeter.X, x4 * pixelPerMeter.X, y1 * pixelPerMeter.Y, y2 * pixelPerMeter.Y, y3 * pixelPerMeter.Y, y4 * pixelPerMeter.Y);
             }
         }
     }

@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using System.Xml;
 using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace GabakWinForms
 {
@@ -36,14 +37,23 @@ namespace GabakWinForms
             public Dictionary<string, List<ObjectiveLocation>> ObjectivesLocation { get; set; } = new Dictionary<string, List<ObjectiveLocation>>();
             public double WarehouseWidth { get; set; }
             public double WarehouseDepth { get; set; }
+            public double CenterX { get; set; }
+            public double CenterY { get; set; }
             public double RackWidth { get; set; }
             public double RackDepth { get; set; }
         }
 
         public class RackLocation
         {
-            public double X { get; set; }
-            public double Y { get; set; }
+            public double X1 { get; set; }
+            public double X2 { get; set; }
+            public double X3 { get; set; }
+            public double X4 { get; set; }
+            public double Y1 { get; set; }
+            public double Y2 { get; set; }
+
+            public double Y3 { get; set; }
+            public double Y4 { get; set; }
             public double Angle { get; set; }
         }
 
@@ -56,19 +66,44 @@ namespace GabakWinForms
         [STAThread]
         static void Main()
         {
-           
-
             // Run Application
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
-
-            
         }
 
+        public static (UserData, WarehouseData) FetchData()
+        {
+            try
+            {
+                // hardcoded path for the downloads folder file "test.ard"
+                string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "test8.ard");
+                string fileContent = File.ReadAllText(filePath);
+
+                // Parse the XML data from the file
+                var warehouseData = ParseARD(fileContent);
+
+                // DEBUG OUTPUT
+                Console.WriteLine("Warehouse Width: " + warehouseData.WarehouseWidth);
+                Console.WriteLine("Warehouse Depth: " + warehouseData.WarehouseDepth);
+                Console.WriteLine("Number of Racks: " + warehouseData.RacksLocation.Count);
+
+                // Return mock data for UserData
+                var userData = new UserData();
+                return (userData, warehouseData);
+            }
+            catch (Exception ex)
+            {
+                // if file not found
+                Console.WriteLine("Error reading file: " + ex.Message);
+                return (null, null);
+            }
+        }
+
+        /*
         public static (UserData, WarehouseData) FetchData(string sessionID = "OLXex0tmxckGhA4vvZKhvHhUZfMKVEnf")
         {
-            // Create an HTTPClient instance (using statement to automatically dispose of object)
+            Create an HTTPClient instance (using statement to automatically dispose of object)
             using (var client = new HttpClient())
             {
                 var offset = 0;
@@ -132,9 +167,9 @@ namespace GabakWinForms
                 //    Console.WriteLine($"Rack Location - X: {rack.X}, Y: {rack.Y}, Angle: {rack.Angle}");
                 //}
                 return (rootObject.data, warehouseData);
-            }
+            } 
         }
-
+        */
         public static string CleanXML(string jsonString)
         {
             var jsonObject = JObject.Parse(jsonString);
@@ -162,6 +197,8 @@ namespace GabakWinForms
             { 
                 warehouseData.WarehouseWidth = double.Parse(warehouseNode.Attributes["width"].Value) / 3.281;
                 warehouseData.WarehouseDepth = double.Parse(warehouseNode.Attributes["depth"].Value) / 3.281;
+                warehouseData.CenterX = double.Parse(warehouseNode.Attributes["center_x"].Value) / 3.281;
+                warehouseData.CenterY = double.Parse(warehouseNode.Attributes["center_y"].Value) / 3.281;
                 warehouseData.RackWidth = double.Parse(warehouseNode.Attributes["storagelocationwidth"].Value) / 3.281;
                 warehouseData.RackDepth = double.Parse(warehouseNode.Attributes["storagelocationdepth"].Value) / 3.281;
             }
@@ -176,14 +213,26 @@ namespace GabakWinForms
                 foreach (XmlNode storageLocationNode in storageLocationNodes)
                 {
                     // parse the X and Y coords of each storage location and convert to meters
-                    var x = double.Parse(storageLocationNode.Attributes["x"].Value) / 3.281;
-                    var y = double.Parse(storageLocationNode.Attributes["y"].Value) / 3.281;
+                    var x1 = double.Parse(storageLocationNode.Attributes["x1"].Value) / 3.281;
+                    var x2 = double.Parse(storageLocationNode.Attributes["x2"].Value) / 3.281;
+                    var x3 = double.Parse(storageLocationNode.Attributes["x3"].Value) / 3.281;
+                    var x4 = double.Parse(storageLocationNode.Attributes["x4"].Value) / 3.281;
+                    var y1 = double.Parse(storageLocationNode.Attributes["y1"].Value) / 3.281;
+                    var y2 = double.Parse(storageLocationNode.Attributes["y2"].Value) / 3.281;
+                    var y3 = double.Parse(storageLocationNode.Attributes["y3"].Value) / 3.281;
+                    var y4 = double.Parse(storageLocationNode.Attributes["y4"].Value) / 3.281;
 
                     // add the storage location data
                     warehouseData.RacksLocation.Add(new RackLocation
                     {
-                        X = x,
-                        Y = y,
+                        X1 = x1,
+                        X2 = x2,
+                        X3 = x3,
+                        X4 = x4,
+                        Y1 = y1,
+                        Y2 = y2,
+                        Y3 = y3,
+                        Y4 = y4,
                         Angle = angle
                     });
                 }
